@@ -16,22 +16,26 @@ WebServer server(80);
 String deviceCode = "";
 const char* registerUrl = "https://hardware-project-y1-itm-uom.vercel.app/api/register";
 
-// Corrected Gear Math: (102 teeth / 18 teeth) * 200 steps = 1133.33
+// Gear Ratio: (102 teeth / 18 teeth) * 200 steps = 1133.33
 const float stepsPerPlateRotation = 1133.33; 
 
 void displayGameStatus(String game, int players, String trump = "") {
     u8g2.clearBuffer();
-    u8g2.setFont(u8g2_font_helvB14_tr);
-    u8g2.drawStr(0, 20, game.c_str());
     
+    // Game Name
+    u8g2.setFont(u8g2_font_helvB14_tr);
+    u8g2.drawStr(0, 22, game.c_str());
+    
+    // Player Count
     u8g2.setFont(u8g2_font_9x15_tr);
     String pLine = "Players: " + String(players);
-    u8g2.drawStr(0, 42, pLine.c_str());
+    u8g2.drawStr(0, 44, pLine.c_str());
 
-    if(trump != "") {
-        u8g2.setFont(u8g2_font_unifont_t_symbols); // Supports suit symbols
+    // Trump Text (No Symbols)
+    if(trump != "" && game == "Omi") {
+        u8g2.setFont(u8g2_font_9x15_tr);
         String tLine = "Trump: " + trump;
-        u8g2.drawStr(0, 62, tLine.c_str());
+        u8g2.drawStr(0, 64, tLine.c_str());
     }
     u8g2.sendBuffer();
 }
@@ -49,7 +53,7 @@ void rotateToPlayers(int players) {
             digitalWrite(STEP_PIN, LOW);
             delayMicroseconds(1200);
         }
-        delay(1500); // Pause at each player
+        delay(1500); // Wait at player position
     }
 }
 
@@ -58,10 +62,16 @@ void setup() {
     pinMode(STEP_PIN, OUTPUT); pinMode(DIR_PIN, OUTPUT); pinMode(LED_PIN, OUTPUT);
     
     u8g2.begin();
+    u8g2.clearBuffer();
+    u8g2.setFont(u8g2_font_6x10_tf);
+    u8g2.drawStr(0, 30, "NEXUS: WiFi Setup");
+    u8g2.sendBuffer();
+
     WiFiManager wm;
     wm.autoConnect("ESP32_Nexus_Setup");
 
     randomSeed(analogRead(0));
+    deviceCode = "";
     for(int i=0; i<8; i++) deviceCode += String(random(0,10));
 
     // Display PIN for Login
@@ -87,6 +97,18 @@ void setup() {
 
         displayGameStatus(game, players, trump);
         rotateToPlayers(players);
+    });
+
+    server.on("/reset_wifi", []() {
+        server.send(200);
+        u8g2.clearBuffer();
+        u8g2.setFont(u8g2_font_6x10_tf);
+        u8g2.drawStr(0, 35, "RESTARTING SYSTEM...");
+        u8g2.sendBuffer();
+        delay(2000);
+        WiFiManager wm;
+        wm.resetSettings();
+        ESP.restart();
     });
 
     server.on("/check_pin", []() {
