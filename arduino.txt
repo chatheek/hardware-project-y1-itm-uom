@@ -1,0 +1,106 @@
+#include <WiFi.h>
+#include <WebServer.h>
+#include <HTTPClient.h>
+#include <WiFiManager.h>
+#include <Wire.h>
+#include <U8g2lib.h> // New Library for 1.3" OLED
+
+// U8G2 Setup for SH1106 128x64 I2C
+// Rotation R0, Clock SCL=22, Data SDA=21
+U8G2_SH1106_128X64_NONAME_F_HW_I2C u8g2(U8G2_R0, /* reset=*/ U8X8_PIN_NONE);
+
+WebServer server(80);
+String deviceCode = "";
+const char* registerUrl = "https://hardware-project-y1-itm-uom.vercel.app/api/register";
+
+// Helper to update 1.3" OLED
+void updateOLED(String header, String body, bool isLarge) {
+    u8g2.clearBuffer();
+    
+    // Header
+    u8g2.setFont(u8g2_font_6x10_tf);
+    u8g2.drawStr(0, 10, header.c_str());
+    u8g2.drawHLine(0, 12, 128);
+
+    // Body
+    if(isLarge) {
+        u8g2.setFont(u8g2_font_logisoso24_tr); // Large font
+        u8g2.drawStr(10, 50, body.c_str());
+    } else {
+        u8g2.setFont(u8g2_font_helvB10_tr); // Medium font
+        u8g2.drawStr(5, 40, body.c_str());
+    }
+    
+    u8g2.sendBuffer();
+}
+
+void setup() {
+    Serial.begin(115200);
+    pinMode(2, OUTPUT);
+    pinMode(0, INPUT_PULLUP);
+
+    // Initialize the 1.3" OLED
+    u8g2.begin();
+    updateOLED("NEXUS BOOT", "WiFi Linking...", false);
+
+    WiFiManager wm;
+
+    // Physical Reset Check (Hold BOOT)
+    if (digitalRead(0) == LOW) {
+        updateOLED("MAINTENANCE", "Wiping WiFi...", false);
+        wm.resetSettings();
+        delay(2000);
+        ESP.restart();
+    }
+
+    if (!wm.autoConnect("ESP32_Nexus_Setup")) {
+        updateOLED("ERROR", "Rebooting...", false);
+        delay(3000);
+        ESP.restart();
+    }
+
+    // WiFi Connected
+    updateOLED("WIFI OK", "Registering...", false);
+
+    // Generate 8-digit code
+    randomSeed(analogRead(0));
+    deviceCode = "";
+    for(int i=0; i<8; i++) deviceCode += String(random(0,10));
+
+    // Show on Screen
+    updateOLED("DEVICE CODE", deviceCode, true);
+    Serial.println("CODE: " + deviceCode);
+
+    // Register with Vercel/Supabase
+    if(WiFi.status() == WL_CONNECTED) {
+        HTTPClient http;
+        http.begin(registerUrl);
+        http.addHeader("Content-Type", "application/json");
+        String json = "{\"code\":\"" + deviceCode + "\", \"ip\":\"" + WiFi.localIP().toString() + "\"}";
+        http.POST(json);
+        http.end();
+    }
+
+    server.enableCORS();
+    server.on("/led/on", []() { digitalWrite(2, HIGH); server.send(200); });
+    server.on("/led/off", []() { digitalWrite(2, LOW); server.send(200); });
+    
+    server.on("/check_pin", []() {
+        if (server.arg("pin") == deviceCode) server.send(200);
+        else server.send(403);
+    });
+
+    server.on("/reset_wifi", []() {
+        server.send(200);
+        delay(2000);
+        WiFiManager wm;
+        wm.resetSettings();
+        ESP.restart();
+    });
+
+    server.begin();
+}
+
+void loop() {
+    server.handleClient();
+}

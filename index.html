@@ -3,88 +3,194 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ESP32 Game Nexus</title>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
+    <title>Nexus Card Dealer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #6366f1; --bg: #0b0e14; --card: #1e293b; --text: #f8fafc; --danger: #ef4444; }
-        body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { background: var(--card); padding: 2.5rem; border-radius: 24px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
-        h1 { margin-top: 0; background: linear-gradient(to right, #818cf8, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        input { width: 100%; padding: 15px; margin: 20px 0; border-radius: 12px; border: 2px solid #334155; background: #0f172a; color: white; text-align: center; font-size: 1.3rem; letter-spacing: 4px; outline: none; }
-        input:focus { border-color: var(--primary); }
-        button { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; transition: 0.3s; margin-bottom: 10px; }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2); }
-        .btn-danger:hover { background: var(--danger); color: white; }
+        :root { --primary: #6366f1; --accent: #22d3ee; --bg: #0f172a; --card: rgba(30, 41, 59, 0.7); --text: #f8fafc; }
+        
+        * { box-sizing: border-box; transition: all 0.3s ease; }
+        body { 
+            background: radial-gradient(circle at top right, #1e1b4b, #0f172a); 
+            color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; 
+            display: flex; justify-content: center; align-items: center; 
+            min-height: 100vh; margin: 0; padding: 20px;
+        }
+
+        .glass-card {
+            background: var(--card); backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 28px; padding: 2.5rem; width: 100%; max-width: 480px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); text-align: center;
+        }
+
+        h1 { font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; background: linear-gradient(to right, #818cf8, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        p.subtitle { color: #94a3b8; font-size: 0.9rem; margin-bottom: 2rem; }
+
+        /* Input Styling */
+        .pin-container { margin-bottom: 2rem; }
+        input[type="text"] {
+            width: 100%; padding: 18px; border-radius: 16px; border: 2px solid #334155;
+            background: rgba(15, 23, 42, 0.6); color: white; text-align: center;
+            font-size: 1.8rem; letter-spacing: 10px; font-weight: 800; outline: none;
+        }
+        input:focus { border-color: var(--primary); box-shadow: 0 0 20px rgba(99, 102, 241, 0.2); }
+
+        /* Game Grid */
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 2rem; }
+        .chip {
+            padding: 12px; border-radius: 14px; background: #1e293b; border: 2px solid transparent;
+            cursor: pointer; font-weight: 600; font-size: 0.9rem; display: flex; align-items: center; gap: 8px;
+        }
+        .chip:hover { background: #334155; }
+        .chip.active { border-color: var(--primary); background: rgba(99, 102, 241, 0.15); color: var(--accent); }
+
+        /* Stepper */
+        .stepper {
+            display: flex; align-items: center; justify-content: space-between;
+            background: #0f172a; padding: 12px 20px; border-radius: 18px; margin-bottom: 2rem;
+        }
+        .step-btn {
+            width: 40px; height: 40px; border-radius: 12px; border: none;
+            background: var(--primary); color: white; font-size: 1.5rem; cursor: pointer;
+        }
+        .step-btn:disabled { background: #334155; opacity: 0.5; cursor: not-allowed; }
+        #playerVal { font-size: 1.5rem; font-weight: 800; }
+
+        /* Trump Selection */
+        .trump-wrap { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 2rem; }
+        .t-btn { 
+            padding: 10px; font-size: 1.5rem; border-radius: 12px; border: 2px solid #334155; 
+            background: #0f172a; cursor: pointer; 
+        }
+        .t-btn.active { border-color: var(--accent); background: rgba(34, 211, 238, 0.1); }
+
+        /* Buttons */
+        .btn {
+            width: 100%; padding: 18px; border-radius: 16px; border: none;
+            font-weight: 800; font-size: 1rem; cursor: pointer; color: white;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            box-shadow: 0 10px 15px -3px rgba(99, 102, 241, 0.4);
+        }
+        .btn:active { transform: translateY(2px); }
+        .btn-outline { background: transparent; border: 1px solid #334155; margin-bottom: 1rem; box-shadow: none; }
+
         .hidden { display: none; }
-        p { color: #94a3b8; font-size: 0.9rem; }
+        .label { display: block; text-align: left; font-size: 0.75rem; color: #64748b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div id="authView">
-            <h1>Nexus Login</h1>
-            <p>Enter the 8-digit code from your Terminal/Serial Monitor</p>
-            <input type="text" id="code" placeholder="00000000" maxlength="8">
-            <button class="btn-primary" onclick="connect()">CONNECT SYSTEM</button>
-        </div>
 
-        <div id="controlView" class="hidden">
-            <h2 id="deviceStatus">Connected</h2>
-            <p id="ipLabel" style="margin-bottom: 20px;"></p>
-            <button style="background: #10b981; color: white;" onclick="hardwareCmd('/led/on')">LED ON</button>
-            <button style="background: #ef4444; color: white;" onclick="hardwareCmd('/led/off')">LED OFF</button>
-            
-            <div style="margin-top: 30px; border-top: 1px solid #334155; padding-top: 20px;">
-                <p>System Maintenance</p>
-                <button class="btn-danger" onclick="triggerWiFi()">RESET WIFI SETTINGS</button>
-            </div>
+<div class="glass-card">
+    <h1>Nexus Dealer</h1>
+    
+    <div id="loginSection">
+        <p class="subtitle">Enter the 8-digit code from your device</p>
+        <div class="pin-container">
+            <input type="text" id="pinInput" placeholder="00000000" maxlength="8">
         </div>
+        <button class="btn" onclick="connectDevice()">Initialize Connection</button>
     </div>
 
-    <script>
-        let espIP = "";
+    <div id="dashSection" class="hidden">
+        <p class="subtitle" id="statusText">System Ready</p>
+        
+        <div style="display: flex; gap: 10px; margin-bottom: 2rem;">
+            <button class="btn btn-outline" onclick="sendCmd('/led/on')">LED ON</button>
+            <button class="btn btn-outline" onclick="sendCmd('/led/off')">LED OFF</button>
+        </div>
 
-        async function connect() {
-            const code = document.getElementById('code').value;
-            if(code.length !== 8) return alert("Code must be 8 digits");
-            
-            try {
-                // 1. Lookup IP from Vercel API
-                const res = await fetch(`/api/lookup?code=${code}`);
-                if(!res.ok) throw new Error();
-                const data = await res.json();
-                
-                espIP = data.ip;
-                
-                // 2. Double check connection to the ESP32 directly
-                // Note: We use check_pin to ensure the IP matches the Code
-                const test = await fetch(`http://${espIP}/check_pin?pin=${code}`);
-                if(test.ok) {
-                    document.getElementById('authView').classList.add('hidden');
-                    document.getElementById('controlView').classList.remove('hidden');
-                    document.getElementById('ipLabel').innerText = `Target IP: ${espIP}`;
-                } else {
-                    alert("IP found, but hardware rejected the code.");
-                }
-            } catch (e) { 
-                alert("Device not found. Check Serial Monitor for code."); 
+        <span class="label">Select Game Type</span>
+        <div class="grid">
+            <div class="chip" onclick="selectGame('Bridge', 4, true)">♠️ Bridge</div>
+            <div class="chip" onclick="selectGame('Spades', 4, true)">♣️ Spades</div>
+            <div class="chip" onclick="selectGame('Hearts', 4, true)">♥️ Hearts</div>
+            <div class="chip" onclick="selectGame('Omi', 4, true)">♦️ Omi</div>
+            <div class="chip" onclick="selectGame('Go Fish', 2, false, 2, 4)">🎣 Go Fish</div>
+            <div class="chip" onclick="selectGame('Rummy', 2, false, 2, 6)">🃏 Rummy</div>
+            <div class="chip" onclick="selectGame('Solitaire', 1, true)">👤 Solitaire</div>
+        </div>
+
+        <span class="label">Players Configuration</span>
+        <div class="stepper">
+            <button class="step-btn" id="mBtn" onclick="updatePlayers(-1)">−</button>
+            <span id="playerVal">4</span>
+            <button class="step-btn" id="pBtn" onclick="updatePlayers(1)">+</button>
+        </div>
+
+        <div id="omiTrumpBox" class="hidden">
+            <span class="label">Trump Selection (Omi)</span>
+            <div class="trump-wrap">
+                <button class="t-btn" onclick="setTrump('♠️', this)">♠️</button>
+                <button class="t-btn" onclick="setTrump('♥️', this)">♥️</button>
+                <button class="t-btn" onclick="setTrump('♣️', this)">♣️</button>
+                <button class="t-btn" onclick="setTrump('♦️', this)">♦️</button>
+            </div>
+        </div>
+
+        <button class="btn" onclick="launchGame()">Start Dealing Sequence</button>
+    </div>
+</div>
+
+<script>
+    let deviceIP = "";
+    let gameConfig = { name: "", players: 4, isLocked: true, min: 2, max: 4, trump: "" };
+
+    async function connectDevice() {
+        const pin = document.getElementById('pinInput').value;
+        if(pin.length < 8) return alert("Enter 8 digits");
+
+        try {
+            const res = await fetch(`/api/lookup?code=${pin}`);
+            const data = await res.json();
+            deviceIP = data.ip;
+
+            // Simple verify with ESP
+            const test = await fetch(`http://${deviceIP}/check_pin?pin=${pin}`);
+            if(test.ok) {
+                document.getElementById('loginSection').classList.add('hidden');
+                document.getElementById('dashSection').classList.remove('hidden');
+                document.getElementById('statusText').innerText = `Linked to Hardware (${deviceIP})`;
             }
-        }
+        } catch(e) { alert("Connection Failed. Is the ESP32 on?"); }
+    }
 
-        function hardwareCmd(path) {
-            // mode: 'no-cors' allows browser to ignore the HTTPS/HTTP mismatch
-            fetch(`http://${espIP}${path}`, { mode: 'no-cors' })
-                .catch(() => console.log("Packet sent (ignoring CORS response)"));
-        }
+    function selectGame(name, p, locked, min=2, max=6) {
+        gameConfig = { name, players: p, isLocked: locked, min, max, trump: "" };
+        
+        // UI Updates
+        document.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.innerText.includes(name)));
+        document.getElementById('playerVal').innerText = p;
+        document.getElementById('mBtn').disabled = locked;
+        document.getElementById('pBtn').disabled = locked;
+        document.getElementById('omiTrumpBox').classList.toggle('hidden', name !== 'Omi');
+    }
 
-        async function triggerWiFi() {
-            if(confirm("CRITICAL: This will wipe WiFi settings. You will need to reconnect to 'ESP32_Nexus_Setup'. Continue?")) {
-                hardwareCmd('/reset_wifi');
-                alert("Reset command sent. Hardware is rebooting. Please check your phone's WiFi settings in 10 seconds.");
-                location.reload();
-            }
+    function updatePlayers(val) {
+        if(gameConfig.isLocked) return;
+        let target = gameConfig.players + val;
+        if(target >= gameConfig.min && target <= gameConfig.max) {
+            gameConfig.players = target;
+            document.getElementById('playerVal').innerText = target;
         }
-    </script>
+    }
+
+    function setTrump(val, el) {
+        gameConfig.trump = val;
+        document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('active'));
+        el.classList.add('active');
+    }
+
+    function launchGame() {
+        if(!gameConfig.name) return alert("Pick a game!");
+        if(gameConfig.name === "Omi" && !gameConfig.trump) return alert("Select Trump!");
+
+        const url = `http://${deviceIP}/start_game?game=${gameConfig.name}&players=${gameConfig.players}&trump=${gameConfig.trump}`;
+        fetch(url, { mode: 'no-cors' });
+        alert(`Dealing for ${gameConfig.name} (${gameConfig.players} players)...`);
+    }
+
+    function sendCmd(path) { fetch(`http://${deviceIP}${path}`, { mode: 'no-cors' }); }
+</script>
+
 </body>
 </html>
