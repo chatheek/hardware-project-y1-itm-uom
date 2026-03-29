@@ -13,7 +13,7 @@ export default async function handler(req, res) {
         const { code, ip } = req.body;
         const { error } = await supabase.from('devices').upsert({ code, local_ip: ip });
         if (error) return res.status(500).json(error);
-        return res.status(200).send("Registered");
+        return res.status(200).send("OK");
     }
-    res.status(405).send("Method Not Allowed");
+    res.status(405).send("Not Allowed");
 }

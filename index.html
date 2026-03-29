@@ -6,30 +6,38 @@
     <title>ESP32 Game Nexus</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #6366f1; --bg: #0b0e14; --card: #1e293b; --text: #f8fafc; }
+        :root { --primary: #6366f1; --bg: #0b0e14; --card: #1e293b; --text: #f8fafc; --danger: #ef4444; }
         body { background: var(--bg); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { background: var(--card); padding: 2rem; border-radius: 24px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.5); }
-        input { width: 100%; padding: 15px; margin: 20px 0; border-radius: 12px; border: 2px solid #334155; background: #0f172a; color: white; text-align: center; font-size: 1.2rem; letter-spacing: 4px; }
-        button { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        .container { background: var(--card); padding: 2.5rem; border-radius: 24px; width: 90%; max-width: 400px; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.1); }
+        h1 { margin-top: 0; background: linear-gradient(to right, #818cf8, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        input { width: 100%; padding: 15px; margin: 20px 0; border-radius: 12px; border: 2px solid #334155; background: #0f172a; color: white; text-align: center; font-size: 1.3rem; letter-spacing: 4px; outline: none; }
+        input:focus { border-color: var(--primary); }
+        button { width: 100%; padding: 14px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; transition: 0.3s; margin-bottom: 10px; }
         .btn-primary { background: var(--primary); color: white; }
+        .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.2); }
+        .btn-danger:hover { background: var(--danger); color: white; }
         .hidden { display: none; }
+        p { color: #94a3b8; font-size: 0.9rem; }
     </style>
 </head>
 <body>
     <div class="container">
         <div id="authView">
-            <h1>Device Login</h1>
-            <p style="color: #94a3b8">Enter the 8-digit code from your OLED screen</p>
+            <h1>Nexus Login</h1>
+            <p>Enter the 8-digit code from your Terminal/Serial Monitor</p>
             <input type="text" id="code" placeholder="00000000" maxlength="8">
             <button class="btn-primary" onclick="connect()">CONNECT SYSTEM</button>
         </div>
 
         <div id="controlView" class="hidden">
             <h2 id="deviceStatus">Connected</h2>
-            <div style="display: grid; gap: 10px;">
-                <button style="background: #10b981; color: white;" onclick="hardwareCmd('/led/on')">LED ON</button>
-                <button style="background: #ef4444; color: white;" onclick="hardwareCmd('/led/off')">LED OFF</button>
-                <button style="background: #f59e0b; color: white; margin-top: 20px;" onclick="hardwareCmd('/reset_wifi')">RESET WIFI</button>
+            <p id="ipLabel" style="margin-bottom: 20px;"></p>
+            <button style="background: #10b981; color: white;" onclick="hardwareCmd('/led/on')">LED ON</button>
+            <button style="background: #ef4444; color: white;" onclick="hardwareCmd('/led/off')">LED OFF</button>
+            
+            <div style="margin-top: 30px; border-top: 1px solid #334155; padding-top: 20px;">
+                <p>System Maintenance</p>
+                <button class="btn-danger" onclick="triggerWiFi()">RESET WIFI SETTINGS</button>
             </div>
         </div>
     </div>
@@ -39,24 +47,43 @@
 
         async function connect() {
             const code = document.getElementById('code').value;
+            if(code.length !== 8) return alert("Code must be 8 digits");
+            
             try {
-                // 1. Ask Vercel API for the Local IP
+                // 1. Lookup IP from Vercel API
                 const res = await fetch(`/api/lookup?code=${code}`);
+                if(!res.ok) throw new Error();
                 const data = await res.json();
                 
-                if (data.ip) {
-                    espIP = data.ip;
+                espIP = data.ip;
+                
+                // 2. Double check connection to the ESP32 directly
+                // Note: We use check_pin to ensure the IP matches the Code
+                const test = await fetch(`http://${espIP}/check_pin?pin=${code}`);
+                if(test.ok) {
                     document.getElementById('authView').classList.add('hidden');
                     document.getElementById('controlView').classList.remove('hidden');
-                    document.getElementById('deviceStatus').innerText = `Linked: ${espIP}`;
+                    document.getElementById('ipLabel').innerText = `Target IP: ${espIP}`;
+                } else {
+                    alert("IP found, but hardware rejected the code.");
                 }
-            } catch (e) { alert("Device not found. Check the code on OLED."); }
+            } catch (e) { 
+                alert("Device not found. Check Serial Monitor for code."); 
+            }
         }
 
         function hardwareCmd(path) {
-            // Talk directly to the ESP32 on the local network
+            // mode: 'no-cors' allows browser to ignore the HTTPS/HTTP mismatch
             fetch(`http://${espIP}${path}`, { mode: 'no-cors' })
-                .catch(() => alert("Hardware unreachable. Ensure you are on the same Wi-Fi."));
+                .catch(() => console.log("Packet sent (ignoring CORS response)"));
+        }
+
+        async function triggerWiFi() {
+            if(confirm("CRITICAL: This will wipe WiFi settings. You will need to reconnect to 'ESP32_Nexus_Setup'. Continue?")) {
+                hardwareCmd('/reset_wifi');
+                alert("Reset command sent. Hardware is rebooting. Please check your phone's WiFi settings in 10 seconds.");
+                location.reload();
+            }
         }
     </script>
 </body>
