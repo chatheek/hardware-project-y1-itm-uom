@@ -3,50 +3,156 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Nexus Dealer Pro</title>
+    <title>Nexus Card Dealer Pro</title>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root { --primary: #6366f1; --accent: #22d3ee; --bg: #0f172a; --card: rgba(30, 41, 59, 0.75); --text: #f8fafc; --danger: #ef4444; }
+        :root { 
+            --primary: #6366f1; 
+            --accent: #22d3ee; 
+            --bg: #0f172a; 
+            --card: rgba(30, 41, 59, 0.75); 
+            --text: #f8fafc; 
+            --danger: #ef4444;
+            --success: #10b981;
+        }
+        
         * { box-sizing: border-box; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-        body { background: radial-gradient(circle at top right, #1e1b4b, #0f172a); color: var(--text); font-family: 'Plus Jakarta Sans', sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; padding: 20px; }
-        .glass-card { background: var(--card); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 32px; padding: 2rem; width: 100%; max-width: 480px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6); text-align: center; }
-        h1 { font-size: 2rem; font-weight: 800; margin: 0; background: linear-gradient(to right, #818cf8, var(--accent)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .input-group { margin: 2rem 0; }
-        input[type="text"] { width: 100%; padding: 18px; border-radius: 16px; border: 2px solid #334155; background: #0f172a; color: white; text-align: center; font-size: 1.8rem; letter-spacing: 10px; font-weight: 800; outline: none; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 1.5rem; }
-        .chip { padding: 12px; border-radius: 14px; background: #1e293b; border: 2px solid transparent; cursor: pointer; font-weight: 600; font-size: 0.85rem; }
-        .chip.active { border-color: var(--primary); background: rgba(99, 102, 241, 0.2); color: var(--accent); }
-        .stepper { display: flex; align-items: center; justify-content: space-between; background: #0f172a; padding: 10px 20px; border-radius: 18px; margin-bottom: 1.5rem; }
-        .step-btn { width: 40px; height: 40px; border-radius: 12px; border: none; background: var(--primary); color: white; font-size: 1.5rem; cursor: pointer; }
-        .trump-wrap { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 1.5rem; }
-        .t-btn { padding: 12px; font-size: 1rem; border-radius: 14px; border: 2px solid #334155; background: #1e293b; cursor: pointer; color: white; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .t-btn.active { border-color: var(--accent); background: rgba(34, 211, 238, 0.1); }
-        .preview-box { background: rgba(255,255,255,0.05); padding: 15px; border-radius: 18px; margin-bottom: 1.5rem; text-align: left; border-left: 4px solid var(--accent); }
-        .btn { width: 100%; padding: 18px; border-radius: 16px; border: none; font-weight: 800; cursor: pointer; color: white; background: var(--primary); }
-        .btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); margin-top: 2rem; padding: 10px; font-size: 0.8rem; }
+        
+        body { 
+            background: radial-gradient(circle at top right, #1e1b4b, #0f172a); 
+            color: var(--text); 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            min-height: 100vh; 
+            margin: 0; 
+            padding: 20px;
+            overflow-x: hidden;
+        }
+
+        .glass-card {
+            background: var(--card); 
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 32px; 
+            padding: 2.5rem; 
+            width: 100%; 
+            max-width: 500px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6); 
+            text-align: center;
+            position: relative;
+        }
+
+        h1 { 
+            font-size: 2.2rem; 
+            font-weight: 800; 
+            margin: 0 0 0.5rem 0; 
+            background: linear-gradient(to right, #818cf8, var(--accent)); 
+            -webkit-background-clip: text; 
+            -webkit-text-fill-color: transparent; 
+        }
+
+        p.subtitle { color: #94a3b8; font-size: 0.95rem; margin-bottom: 2rem; }
+
+        /* Input Styling */
+        .pin-container { margin-bottom: 2rem; position: relative; }
+        input[type="text"] {
+            width: 100%; padding: 20px; border-radius: 20px; border: 2px solid #334155;
+            background: rgba(15, 23, 42, 0.8); color: white; text-align: center;
+            font-size: 2rem; letter-spacing: 12px; font-weight: 800; outline: none;
+        }
+        input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 25px rgba(99, 102, 241, 0.3); }
+
+        /* Game Grid */
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 2rem; }
+        .chip {
+            padding: 14px; border-radius: 18px; background: #1e293b; border: 2px solid transparent;
+            cursor: pointer; font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 10px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .chip:hover { background: #334155; transform: translateY(-2px); }
+        .chip.active { border-color: var(--primary); background: rgba(99, 102, 241, 0.2); color: var(--accent); transform: scale(1.02); }
+
+        /* Stepper */
+        .stepper {
+            display: flex; align-items: center; justify-content: space-between;
+            background: #0f172a; padding: 14px 24px; border-radius: 22px; margin-bottom: 2rem;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .step-btn {
+            width: 44px; height: 44px; border-radius: 14px; border: none;
+            background: var(--primary); color: white; font-size: 1.8rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .step-btn:hover:not(:disabled) { background: #4f46e5; filter: brightness(1.2); }
+        .step-btn:disabled { background: #334155; opacity: 0.4; cursor: not-allowed; }
+        #playerVal { font-size: 1.8rem; font-weight: 800; color: var(--accent); }
+
+        /* Trump Selection */
+        .trump-wrap { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 2rem; }
+        .t-btn { 
+            padding: 12px; font-size: 1.8rem; border-radius: 16px; border: 2px solid #334155; 
+            background: #0f172a; cursor: pointer; 
+        }
+        .t-btn:hover { border-color: var(--accent); transform: scale(1.1); }
+        .t-btn.active { border-color: var(--accent); background: rgba(34, 211, 238, 0.15); box-shadow: 0 0 15px rgba(34, 211, 238, 0.2); }
+
+        /* Buttons */
+        .btn {
+            width: 100%; padding: 20px; border-radius: 20px; border: none;
+            font-weight: 800; font-size: 1.1rem; cursor: pointer; color: white;
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.5);
+            margin-top: 10px;
+        }
+        .btn:hover { filter: brightness(1.1); transform: translateY(-2px); }
+        .btn:active { transform: translateY(0); }
+        
+        .btn-outline { background: transparent; border: 1px solid #334155; color: #94a3b8; font-size: 0.85rem; padding: 12px; margin: 0; }
+        .btn-outline:hover { color: white; border-color: var(--primary); background: rgba(99, 102, 241, 0.1); }
+        
+        .btn-danger { background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); color: var(--danger); font-size: 0.8rem; padding: 10px; margin-top: 2rem; }
+        .btn-danger:hover { background: var(--danger); color: white; }
+
+        /* Utility */
         .hidden { display: none; }
-        .label { display: block; text-align: left; font-size: 0.7rem; color: #64748b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+        .label { display: block; text-align: left; font-size: 0.8rem; color: #64748b; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 700; }
+        .status-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--success); display: inline-block; margin-right: 8px; }
+        
+        /* Settings Section */
+        .settings-tray { 
+            margin-top: 2.5rem; padding-top: 1.5rem; 
+            border-top: 1px solid rgba(255,255,255,0.05);
+            display: flex; flex-direction: column; gap: 10px;
+        }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .animate { animation: fadeIn 0.4s ease forwards; }
     </style>
 </head>
 <body>
 
-<div class="glass-card">
+<div class="glass-card animate">
     <h1>Nexus Dealer</h1>
     
     <div id="loginSection">
-        <div class="input-group">
+        <p class="subtitle">Enter the 8-digit hardware code</p>
+        <div class="pin-container">
             <input type="text" id="pinInput" placeholder="00000000" maxlength="8">
         </div>
-        <button class="btn" onclick="connectDevice()">Connect Hardware</button>
+        <button class="btn" onclick="connectDevice()">Initialize Connection</button>
     </div>
 
-    <div id="dashSection" class="hidden">
-        <div class="preview-box">
-            <span class="label" style="margin-bottom:4px">Selection Preview</span>
-            <div id="summaryText" style="font-weight: 600; font-size: 0.9rem; color: var(--accent);">Pick a game to begin...</div>
+    <div id="dashSection" class="hidden animate">
+        <p class="subtitle" id="statusText"><span class="status-dot"></span>System Ready</p>
+        
+        <div style="display: flex; gap: 12px; margin-bottom: 2rem;">
+            <button class="btn btn-outline" onclick="sendCmd('/led/on')">💡 LED ON</button>
+            <button class="btn btn-outline" onclick="sendCmd('/led/off')">🌑 LED OFF</button>
         </div>
 
-        <span class="label">Select Game</span>
+        <span class="label">Select Game Type</span>
         <div class="grid">
             <div class="chip" onclick="selectGame('Bridge', 4, true)">♠️ Bridge</div>
             <div class="chip" onclick="selectGame('Spades', 4, true)">♣️ Spades</div>
@@ -60,87 +166,135 @@
         <span class="label">Players</span>
         <div class="stepper">
             <button class="step-btn" id="mBtn" onclick="updatePlayers(-1)">−</button>
-            <span id="playerVal" style="font-size: 1.5rem; font-weight: 800;">4</span>
+            <span id="playerVal">4</span>
             <button class="step-btn" id="pBtn" onclick="updatePlayers(1)">+</button>
         </div>
 
-        <div id="omiTrumpBox" class="hidden">
-            <span class="label">Select Trump Card</span>
+        <div id="omiTrumpBox" class="hidden animate">
+            <span class="label">Omi Trump Card</span>
             <div class="trump-wrap">
-                <button class="t-btn" onclick="setTrump('♠️ Spades', this)"><span>♠️</span> Spades</button>
-                <button class="t-btn" onclick="setTrump('♥️ Hearts', this)"><span>♥️</span> Hearts</button>
-                <button class="t-btn" onclick="setTrump('♣️ Clubs', this)"><span>♣️</span> Clubs</button>
-                <button class="t-btn" onclick="setTrump('♦️ Diamonds', this)"><span>♦️</span> Diamonds</button>
+                <button class="t-btn" onclick="setTrump('♠️', this)">♠️</button>
+                <button class="t-btn" onclick="setTrump('♥️', this)">♥️</button>
+                <button class="t-btn" onclick="setTrump('♣️', this)">♣️</button>
+                <button class="t-btn" onclick="setTrump('♦️', this)">♦️</button>
             </div>
         </div>
 
-        <button class="btn" id="launchBtn" onclick="launchGame()">Start Sequence</button>
-        <button class="btn-danger" style="width:100%; border-radius:12px;" onclick="resetWiFi()">Disconnect WiFi & Restart Device</button>
+        <button class="btn" id="mainLaunchBtn" onclick="launchGame()">Start Dealing</button>
+
+        <div class="settings-tray">
+            <button class="btn btn-outline" style="border:none" onclick="resetSelection()">🔄 Reset Selection</button>
+            <button class="btn btn-danger" onclick="disconnectWiFi()">⚠️ Disconnect Device WiFi</button>
+        </div>
     </div>
 </div>
 
 <script>
     let deviceIP = "";
-    let config = { name: "", players: 4, locked: true, min: 2, max: 4, trump: "" };
+    let gameConfig = { name: "", players: 4, isLocked: true, min: 2, max: 4, trump: "" };
 
     async function connectDevice() {
         const pin = document.getElementById('pinInput').value;
+        if(pin.length < 8) return alert("Please enter the full 8-digit code.");
+
+        const btn = document.querySelector('#loginSection .btn');
+        btn.innerText = "Connecting...";
+        
         try {
             const res = await fetch(`/api/lookup?code=${pin}`);
             const data = await res.json();
             deviceIP = data.ip;
+
+            // Verify with local ESP32
             const test = await fetch(`http://${deviceIP}/check_pin?pin=${pin}`);
             if(test.ok) {
                 document.getElementById('loginSection').classList.add('hidden');
                 document.getElementById('dashSection').classList.remove('hidden');
+                document.getElementById('statusText').innerHTML = `<span class="status-dot"></span>Connected to Dealer (${deviceIP})`;
             }
-        } catch(e) { alert("Device connection failed."); }
+        } catch(e) { 
+            alert("Hardware not found. Ensure the ESP32 is powered on and connected to your WiFi."); 
+            btn.innerText = "Initialize Connection";
+        }
     }
 
     function selectGame(name, p, locked, min=2, max=6) {
-        config = { ...config, name, players: p, locked, min, max, trump: "" };
+        gameConfig = { name, players: p, isLocked: locked, min, max, trump: "" };
+        
+        // UI Updates
         document.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.innerText.includes(name)));
-        document.getElementById('omiTrumpBox').classList.toggle('hidden', name !== 'Omi');
-        updateUI();
+        document.getElementById('playerVal').innerText = p;
+        document.getElementById('mBtn').disabled = locked;
+        document.getElementById('pBtn').disabled = locked;
+        
+        // Hide Trump Box if switching away from Omi
+        document.getElementById('omiTrumpBox').classList.add('hidden');
+        document.getElementById('mainLaunchBtn').innerText = (name === "Omi") ? "Choose Trump & Start" : "Start Dealing";
     }
 
     function updatePlayers(val) {
-        if(config.locked) return;
-        let t = config.players + val;
-        if(t >= config.min && t <= config.max) { config.players = t; updateUI(); }
+        if(gameConfig.isLocked) return;
+        let target = gameConfig.players + val;
+        if(target >= gameConfig.min && target <= gameConfig.max) {
+            gameConfig.players = target;
+            document.getElementById('playerVal').innerText = target;
+        }
     }
 
     function setTrump(val, el) {
-        config.trump = val;
+        gameConfig.trump = val;
         document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('active'));
         el.classList.add('active');
-        updateUI();
-    }
-
-    function updateUI() {
-        document.getElementById('playerVal').innerText = config.players;
-        document.getElementById('mBtn').disabled = config.locked;
-        document.getElementById('pBtn').disabled = config.locked;
         
-        let summary = `${config.name || '---'} | ${config.players} Players`;
-        if(config.trump) summary += ` | Trump: ${config.trump}`;
-        document.getElementById('summaryText').innerText = summary;
+        // If user already clicked "Launch" once, picking trump starts the motor
+        confirmAndLaunch();
     }
 
     function launchGame() {
-        if(!config.name) return alert("Select a game!");
-        if(config.name === "Omi" && !config.trump) return alert("Select Trump!");
+        if(!gameConfig.name) return alert("Please select a game first.");
         
-        fetch(`http://${deviceIP}/start_game?game=${config.name}&players=${config.players}&trump=${config.trump}`, { mode: 'no-cors' });
-        alert("Dealing sequence started...");
+        // Omi Special Logic: Reveal trump selector
+        if(gameConfig.name === "Omi") {
+            document.getElementById('omiTrumpBox').classList.remove('hidden');
+            return;
+        }
+
+        confirmAndLaunch();
     }
 
-    function resetWiFi() {
-        if(confirm("Confirm WiFi Disconnect? OLED will restart.")) {
-            fetch(`http://${deviceIP}/reset_wifi`, { mode: 'no-cors' });
-            setTimeout(() => location.reload(), 1000);
+    function confirmAndLaunch() {
+        const url = `http://${deviceIP}/start_game?game=${gameConfig.name}&players=${gameConfig.players}&trump=${gameConfig.trump}`;
+        fetch(url, { mode: 'no-cors' });
+        
+        const launchBtn = document.getElementById('mainLaunchBtn');
+        launchBtn.innerText = "Motor Running...";
+        launchBtn.style.background = "var(--success)";
+        
+        setTimeout(() => {
+            launchBtn.innerText = "Start Dealing";
+            launchBtn.style.background = "";
+        }, 5000);
+    }
+
+    function resetSelection() {
+        gameConfig = { name: "", players: 4, isLocked: true, min: 2, max: 4, trump: "" };
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        document.querySelectorAll('.t-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('playerVal').innerText = "4";
+        document.getElementById('omiTrumpBox').classList.add('hidden');
+        document.getElementById('mainLaunchBtn').innerText = "Start Dealing";
+    }
+
+    function disconnectWiFi() {
+        if(confirm("This will wipe WiFi settings on the ESP32. You will need to re-setup the connection via the ESP32 Access Point. Continue?")) {
+            sendCmd('/reset_wifi');
+            alert("WiFi Wiped. Device is restarting...");
+            location.reload();
         }
     }
+
+    function sendCmd(path) { fetch(`http://${deviceIP}${path}`, { mode: 'no-cors' }); }
 </script>
+
 </body>
 </html>
