@@ -1,0 +1,26 @@
+{
+  "name": "hardware-project---year-01",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chatheek/hardware-project-y1-itm-uom.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/chatheek/hardware-project-y1-itm-uom/issues"
+  },
+  "homepage": "https://github.com/chatheek/hardware-project-y1-itm-uom#readme",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.100.1",
+    "cors": "^2.8.6",
+    "express": "^5.2.1"
+  }
+}

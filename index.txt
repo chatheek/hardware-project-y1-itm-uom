@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ESP32 Game Nexus</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #6366f1;
+            --accent: #06b6d4;
+            --bg: #0b0e14;
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --text-main: #f8fafc;
+            --text-dim: #94a3b8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * { box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body {
+            background: radial-gradient(circle at top right, #1e1b4b, #0b0e14);
+            color: var(--text-main);
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 95%; max-width: 480px;
+            background: var(--card-bg); backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px; padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 { font-size: 1.6rem; text-align: center; margin-bottom: 2rem; background: linear-gradient(to right, #818cf8, #22d3ee); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+        .pin-input {
+            width: 100%; background: rgba(15, 23, 42, 0.6); border: 2px solid #334155;
+            border-radius: 12px; padding: 15px; color: white; font-size: 1.2rem;
+            letter-spacing: 8px; text-align: center; margin-bottom: 1rem;
+        }
+
+        .btn {
+            cursor: pointer; border: none; border-radius: 12px; padding: 14px;
+            font-weight: 600; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
+        }
+
+        .btn-primary { background: var(--primary); color: white; margin-bottom: 10px; }
+        .btn-reset { background: rgba(245, 158, 11, 0.1); color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.2); margin-top: 15px; }
+        .btn-reset:hover { background: var(--warning); color: white; }
+        .btn-disconnect { background: rgba(239, 68, 68, 0.1); color: #fca5a5; border: 1px solid rgba(239, 68, 68, 0.2); margin-top: 10px; }
+        .btn-disconnect:hover { background: var(--danger); color: white; }
+
+        .game-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .game-card {
+            background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
+            padding: 12px; border-radius: 12px; text-align: center; cursor: pointer; transition: 0.2s;
+        }
+        .game-card.active { background: rgba(99, 102, 241, 0.2); border-color: var(--primary); font-weight: bold; }
+
+        .stepper { display: flex; align-items: center; justify-content: center; gap: 20px; background: rgba(0,0,0,0.2); padding: 10px; border-radius: 15px; }
+        .step-btn { width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: white; font-size: 1.2rem; display: flex; align-items: center; justify-content: center; }
+        .step-btn.disabled { background: #334155; opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
+
+        .trump-selection { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 15px; }
+        .trump-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 15px; border-radius: 12px; font-size: 1.5rem; text-align: center; cursor: pointer; }
+
+        .output-card {
+            margin-top: 25px; padding: 20px; border-radius: 15px;
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.15), rgba(99, 102, 241, 0.15));
+            border: 1px solid var(--accent); animation: slideUp 0.4s ease;
+        }
+
+        .hidden { display: none; }
+        label { color: var(--text-dim); font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1px; display: block; margin-bottom: 8px; }
+        
+        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="authView">
+        <h1>Device Security</h1>
+        <input type="text" id="pinCode" class="pin-input" placeholder="••••••••" maxlength="8">
+        <button class="btn btn-primary" onclick="checkPin()">CONNECT DEVICE</button>
+    </div>
+
+    <div id="controlView" class="hidden">
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button class="btn" style="background: var(--success); color: white;" onclick="console.log('LED:ON')">LED ON</button>
+            <button class="btn" style="background: var(--danger); color: white;" onclick="console.log('LED:OFF')">LED OFF</button>
+        </div>
+
+        <div id="selectionArea">
+            <label>Select Game</label>
+            <div class="game-grid">
+                <div class="game-card" onclick="setGame('Bridge', 4, false)">Bridge</div>
+                <div class="game-card" onclick="setGame('Spades', 4, false)">Spades</div>
+                <div class="game-card" onclick="setGame('Hearts', 4, false)">Hearts</div>
+                <div class="game-card" onclick="setGame('Omi', 4, false)">Omi</div>
+                <div class="game-card" onclick="setGame('Gofish', 2, true, 2, 4)">Go Fish</div>
+                <div class="game-card" onclick="setGame('Rummy', 3, true, 2, 6)">Rummy</div>
+                <div class="game-card" onclick="setGame('Solitaire', 1, false)">Solitaire</div>
+            </div>
+
+            <label>Players</label>
+            <div class="stepper">
+                <button class="btn step-btn" id="minus">−</button>
+                <div id="playerVal" style="font-size: 1.5rem; font-weight: bold;">4</div>
+                <button class="btn step-btn" id="plus">+</button>
+            </div>
+
+            <button class="btn btn-primary" style="margin-top: 20px;" onclick="submitSetup()">SUBMIT SETUP</button>
+        </div>
+
+        <div id="omiTrumpView" class="hidden">
+            <h2 style="text-align: center; color: var(--accent);">Trump Choice</h2>
+            <div class="trump-selection">
+                <div class="trump-btn" onclick="finishOmi('♠️')">♠️</div>
+                <div class="trump-btn" onclick="finishOmi('♥️')">♥️</div>
+                <div class="trump-btn" onclick="finishOmi('♣️')">♣️</div>
+                <div class="trump-btn" onclick="finishOmi('♦️')">♦️</div>
+            </div>
+        </div>
+
+        <div id="resultView" class="output-card hidden">
+            <div id="finalText" style="text-align: center; line-height: 1.8;"></div>
+        </div>
+
+        <button class="btn btn-reset" onclick="resetUI()">RESET SELECTION</button>
+        <button class="btn btn-disconnect" onclick="disconnect()">DISCONNECT SYSTEM</button>
+    </div>
+</div>
+
+<script>
+    let state = { game: '', players: 4, isLocked: true, min: 1, max: 10 };
+
+    function checkPin() {
+        if(document.getElementById('pinCode').value === "12345678") {
+            document.getElementById('authView').classList.add('hidden');
+            document.getElementById('controlView').classList.remove('hidden');
+        } else { alert("Access Denied"); }
+    }
+
+    function setGame(name, count, adjustable, min=1, max=10) {
+        state.game = name; state.players = count; state.isLocked = !adjustable;
+        state.min = min; state.max = max;
+        document.querySelectorAll('.game-card').forEach(c => c.classList.toggle('active', c.innerText === name));
+        document.getElementById('playerVal').innerText = count;
+        
+        const m = document.getElementById('minus'), p = document.getElementById('plus');
+        m.classList.toggle('disabled', !adjustable); m.innerHTML = adjustable ? '−' : '🔒';
+        p.classList.toggle('disabled', !adjustable); p.innerHTML = adjustable ? '+' : '🔒';
+    }
+
+    document.getElementById('plus').onclick = () => { if(!state.isLocked && state.players < state.max) { state.players++; document.getElementById('playerVal').innerText = state.players; } };
+    document.getElementById('minus').onclick = () => { if(!state.isLocked && state.players > state.min) { state.players--; document.getElementById('playerVal').innerText = state.players; } };
+
+    function submitSetup() {
+        if(!state.game) return alert("Select a game");
+        if(state.game === 'Omi') {
+            document.getElementById('selectionArea').classList.add('hidden');
+            document.getElementById('omiTrumpView').classList.remove('hidden');
+        } else {
+            showFinal(`Game: ${state.game}<br>No. of Players: ${state.players}`);
+        }
+    }
+
+    function finishOmi(trump) {
+        document.getElementById('omiTrumpView').classList.add('hidden');
+        showFinal(`Game: Omi<br>No. of Players: 4<br>Trump Card: ${trump}`);
+    }
+
+    function showFinal(html) {
+        document.getElementById('selectionArea').classList.add('hidden');
+        document.getElementById('resultView').classList.remove('hidden');
+        document.getElementById('finalText').innerHTML = `<strong>SESSION ACTIVE</strong><br>${html}`;
+    }
+
+    // Clears the current game selection but stays logged in
+    function resetUI() {
+        state = { game: '', players: 4, isLocked: true, min: 1, max: 10 };
+        document.querySelectorAll('.game-card').forEach(c => c.classList.remove('active'));
+        document.getElementById('playerVal').innerText = '4';
+        document.getElementById('selectionArea').classList.remove('hidden');
+        document.getElementById('omiTrumpView').classList.add('hidden');
+        document.getElementById('resultView').classList.add('hidden');
+    }
+
+    // Wipes everything and goes back to PIN entry
+    function disconnect() {
+        resetUI();
+        document.getElementById('pinCode').value = '';
+        document.getElementById('controlView').classList.add('hidden');
+        document.getElementById('authView').classList.remove('hidden');
+    }
+</script>
+</body>
+</html>
